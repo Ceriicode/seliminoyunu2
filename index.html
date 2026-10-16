@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#16122a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Selim: Zombi Avcısı</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23ffc928'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' font-family='Arial' font-weight='bold' fill='%23b3261e'%3ES%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+/* ===== Renk değişkenleri ===== */
+:root{--bg:#16122a;--panel:#241d3f;--panel2:#30285a;--cizgi:#4a3f80;--yazi:#fff;--soluk:#b9b2dd;--sari:#ffc928;--kirmizi:#e63946;--yesil:#43c463;--mavi:#3aa0ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--yazi);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overscroll-behavior:none}
+h1,h2,h3,.btn,.lf{font-family:"Lilita One",system-ui,sans-serif;font-weight:400;letter-spacing:.5px}
+
+/* ===== Oyun tuvali ===== */
+#oyun{position:fixed;left:0;top:0;width:100%;height:100%;display:block;touch-action:none}
+
+/* ===== Ekranlar (menü, garaj vb.) ===== */
+.ekran{position:fixed;inset:0;display:none;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:manipulation;z-index:10;
+  padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 28px);
+  background:radial-gradient(circle at 50% 0%,#3b2a6e 0%,#16122a 62%)}
+.ekran.aktif{display:block}
+.ic{max-width:760px;margin:0 auto}
+.ustBar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ustBar h2{flex:1;margin:0;font-size:26px;text-align:center}
+
+/* ===== Düğmeler ===== */
+.btn{border:0;border-radius:14px;padding:12px 18px;font-size:18px;color:#fff;cursor:pointer;background:var(--panel2);box-shadow:0 4px 0 rgba(0,0,0,.35);touch-action:manipulation;transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.btn.sari{background:linear-gradient(#ffd84d,#f5a800);color:#3a2300}
+.btn.yesil{background:linear-gradient(#5be07a,#22a347)}
+.btn.kirmizi{background:linear-gradient(#ff5d6a,#c81d2c)}
+.btn.mavi{background:linear-gradient(#5cb6ff,#1f78d1)}
+.btn:disabled{opacity:.45;filter:grayscale(.6);cursor:default}
+.btn.kucuk{padding:8px 12px;font-size:15px;border-radius:11px}
+.btn.genis{width:100%;margin-top:14px;font-size:22px}
+.coin{display:inline-block;width:.95em;height:.95em;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6b0,#ffc928 45%,#c98a00);box-shadow:inset 0 0 0 2px #b07700;vertical-align:-.12em;margin-right:4px}
+.paraEtiket{background:rgba(0,0,0,.35);padding:8px 12px;border-radius:12px;font-family:"Lilita One",system-ui;font-size:18px;white-space:nowrap}
+
+/* ===== Ana menü ===== */
+#menu .ic{display:flex;flex-direction:column;align-items:center;text-align:center}
+.ustSag{align-self:flex-end}
+.logo{font-family:"Lilita One",system-ui;font-size:clamp(48px,13vw,84px);line-height:.9;margin:6px 0 0;color:var(--sari);text-shadow:0 5px 0 #b3261e,0 9px 18px rgba(0,0,0,.5);transform:rotate(-3deg)}
+.logoAlt{font-family:"Lilita One",system-ui;font-size:clamp(22px,6.5vw,36px);color:#9cff57;text-shadow:0 3px 0 #2e6b12;margin:6px 0 4px;transform:rotate(-3deg)}
+#selimPortre{width:min(230px,58vw);height:min(230px,58vw);animation:zipla 2.4s ease-in-out infinite}
+@keyframes zipla{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.menuBtnler{display:flex;flex-direction:column;gap:12px;width:min(320px,90%);margin-top:8px}
+.menuBtnler .btn{font-size:24px;padding:14px}
+.alt{color:var(--soluk);font-size:13px;margin-top:16px;line-height:1.6;max-width:420px}
+
+/* ===== Bölüm seçimi ===== */
+.dunya{background:var(--panel);border-radius:18px;padding:12px;margin-bottom:14px;border:2px solid var(--cizgi)}
+.dunya h3{margin:0 0 10px;font-size:20px;display:flex;align-items:center;gap:8px}
+.dunyaRenk{width:18px;height:18px;border-radius:6px;display:inline-block;border:2px solid rgba(255,255,255,.3)}
+.bolumIzgara{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.bolumBtn{aspect-ratio:1;border:0;border-radius:13px;background:linear-gradient(#4c3f8f,#352c68);color:#fff;font-family:"Lilita One",system-ui;font-size:21px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.35);padding:2px;touch-action:manipulation;line-height:1.05}
+.bolumBtn small{font-size:10px;color:var(--sari);letter-spacing:.5px}
+.bolumBtn.boss{background:linear-gradient(#d93b48,#8d1622)}
+.bolumBtn.kilit{background:#2a2444;color:#6f679a;box-shadow:none;cursor:default;font-size:18px}
+
+/* ===== Garaj ===== */
+#garajOn{width:100%;height:190px;display:block;border-radius:18px;background:radial-gradient(ellipse at center,#3d3470 0%,#1f1a38 72%)}
+.yatayListe{display:flex;gap:10px;overflow-x:auto;padding:10px 2px}
+.arabaKart{flex:0 0 auto;width:130px;border:3px solid transparent;background:var(--panel);border-radius:14px;color:#fff;padding:6px;cursor:pointer;text-align:center;font-family:"Lilita One",system-ui;font-size:15px}
+.arabaKart canvas{width:112px;height:62px;display:block;margin:0 auto}
+.arabaKart.secili{border-color:var(--sari)}
+.arabaKart small{display:block;font-family:system-ui;font-size:12px;color:var(--soluk);margin-top:2px}
+.panel{background:var(--panel);border-radius:18px;padding:14px;margin-top:10px;border:2px solid var(--cizgi)}
+.statSira{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:14px}
+.statSira b{width:78px;font-weight:600;color:var(--soluk)}
+.statBar{flex:1;height:10px;background:#1a1530;border-radius:6px;overflow:hidden}
+.statBar i{display:block;height:100%;background:linear-gradient(90deg,#43c463,#c6f75a);border-radius:6px}
+.yukSira{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #3a3166}
+.yukSira .ad{flex:1}
+.yukSira .ad div{font-weight:700}
+.yukSira small{color:var(--soluk)}
+.pipler{display:flex;gap:3px;margin-top:4px}
+.pipler i{width:18px;height:7px;border-radius:3px;background:#1a1530}
+.pipler i.dolu{background:var(--sari)}
+.maks{font-family:"Lilita One",system-ui;color:var(--sari)}
+.renkler{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.renk{width:34px;height:34px;border-radius:50%;border:3px solid rgba(255,255,255,.18);cursor:pointer;padding:0}
+.renk.secili{border-color:#fff;transform:scale(1.12)}
+.desenler{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.desenBtn.secili{outline:3px solid var(--sari)}
+h4{margin:14px 0 4px;font-size:15px;color:var(--soluk);font-weight:700}
+
+/* ===== Silah dükkanı ===== */
+.silahKart{display:flex;gap:12px;background:var(--panel);border:3px solid var(--cizgi);border-radius:16px;padding:12px;margin-bottom:10px;flex-wrap:wrap}
+.silahKart.secili{border-color:var(--sari)}
+.silahKart canvas{width:120px;height:64px;background:#1a1530;border-radius:12px;flex:0 0 auto}
+.silahBilgi{flex:1;min-width:190px}
+.silahBilgi h3{margin:0;font-size:20px}
+.silahBilgi p{margin:2px 0 6px;color:var(--soluk);font-size:13px}
+.etiket{display:inline-block;color:var(--sari);font-weight:800;margin:6px 0}
+.bilgiNot{color:var(--soluk);font-size:13px;margin:0 0 10px;text-align:center}
+
+/* ===== Oyun içi gösterge (HUD) ===== */
+#hud{position:fixed;inset:0;pointer-events:none;display:none;z-index:5}
+.hudUst{position:absolute;left:0;right:0;top:0;display:flex;gap:8px;align-items:flex-start;padding:calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 10px) 0 calc(env(safe-area-inset-left) + 10px)}
+.hudSol{display:flex;flex-direction:column;gap:5px;width:min(30vw,200px)}
+.hudOrta{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.hudSag{display:flex;gap:6px;align-items:center}
+.bar{position:relative;height:16px;background:rgba(0,0,0,.55);border-radius:9px;overflow:hidden;border:2px solid rgba(255,255,255,.25)}
+.bar>div{height:100%;width:100%;transform-origin:left center}
+.bar span{position:absolute;inset:0;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;text-shadow:0 1px 2px #000;letter-spacing:.5px}
+#canDolu{background:linear-gradient(#6fe36f,#2a9d3a)}
+#nitroDolu{background:linear-gradient(#69d2ff,#1c7ed6)}
+#ilerDolu{background:linear-gradient(#ffd84d,#f08c00)}
+.bar.ilerleme{width:100%;max-width:300px;height:18px}
+#bolumAd{font-family:"Lilita One",system-ui;font-size:15px;text-shadow:0 2px 3px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#durBtn{pointer-events:auto;width:42px;height:42px;border-radius:12px;border:0;background:rgba(0,0,0,.5);color:#fff;font-size:17px;font-weight:900;cursor:pointer;touch-action:manipulation}
+.hudPara{background:rgba(0,0,0,.5);padding:9px 10px;border-radius:12px;font-family:"Lilita One",system-ui;font-size:16px}
+#bossBar{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 70px);transform:translateX(-50%);width:min(80vw,420px);display:none;text-align:center}
+#bossDolu{background:linear-gradient(#ff5d6a,#a5101e)}
+#bossAd{font-family:"Lilita One",system-ui;font-size:17px;color:#ff9a9a;text-shadow:0 2px 3px #000;margin-bottom:3px}
+#ipucu{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:12px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.45);padding:6px 10px;border-radius:10px;white-space:nowrap}
+#mobilKontrol{position:fixed;right:calc(env(safe-area-inset-right) + 12px);bottom:calc(env(safe-area-inset-bottom) + 16px);display:none;flex-direction:column;align-items:flex-end;gap:12px;z-index:6}
+#silahBtn{width:120px;height:78px;border-radius:18px;border:3px solid rgba(255,255,255,.35);background:rgba(20,16,40,.72);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;touch-action:none;cursor:pointer}
+#silahBtn canvas{width:96px;height:44px}
+#silahBtn span{font-size:11px;font-weight:800}
+#nitroBtn{width:88px;height:88px;border-radius:50%;border:3px solid rgba(255,255,255,.55);background:radial-gradient(circle at 40% 35%,#7fd6ff,#1767c7);color:#fff;font-family:"Lilita One",system-ui;font-size:17px;touch-action:none;box-shadow:0 5px 0 rgba(0,0,0,.35);cursor:pointer}
+#nitroBtn.basili{transform:scale(.92);filter:brightness(1.25)}
+body.masaustu #nitroBtn{display:none}
+body.dokunmatik #ipucu{display:none}
+
+/* ===== Bölüm başı yazısı ===== */
+#banner{position:fixed;left:0;right:0;top:30%;text-align:center;pointer-events:none;z-index:7;opacity:0;padding:0 16px}
+#banner.goster{animation:bannerAn 2.8s ease forwards}
+#banner .b1{font-family:"Lilita One",system-ui;font-size:clamp(30px,8vw,58px);color:var(--sari);text-shadow:0 4px 0 #b3261e,0 8px 20px rgba(0,0,0,.6)}
+#banner .b2{font-size:clamp(14px,4vw,20px);font-weight:800;text-shadow:0 2px 4px #000;margin-top:6px}
+@keyframes bannerAn{0%{opacity:0;transform:scale(.6)}12%{opacity:1;transform:scale(1.08)}20%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-20px)}}
+
+/* ===== Açılır pencereler (duraklat, sonuç) ===== */
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:rgba(10,8,20,.74);padding:16px;overflow-y:auto}
+.overlay.aktif{display:flex}
+.overlay .panel{width:min(420px,100%);text-align:center;margin:auto}
+.overlay h2{margin:4px 0;font-size:34px}
+.yildizlar{font-size:46px;letter-spacing:6px;color:#4a4270;line-height:1}
+.yildizlar .y{color:var(--sari);text-shadow:0 0 12px rgba(255,201,40,.7)}
+#sonucSelim{width:130px;height:130px}
+.btnSutun{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.btnSira{display:flex;gap:10px}
+.btnSira .btn{flex:1}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%) translateY(140px);background:#111;color:#fff;padding:10px 16px;border-radius:12px;z-index:50;transition:transform .25s;font-weight:700;max-width:90vw;text-align:center;pointer-events:none}
+#toast.goster{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<canvas id="oyun"></canvas>
+
+<!-- ============ ANA MENÜ ============ -->
+<section class="ekran aktif" id="menu">
+  <div class="ic">
+    <div class="ustSag"><span class="paraEtiket" id="menuPara"></span></div>
+    <div class="logo">SELİM</div>
+    <div class="logoAlt">ZOMBİ AVCISI</div>
+    <canvas id="selimPortre"></canvas>
+    <div class="menuBtnler">
+      <button class="btn sari" data-git="bolumler">▶ OYNA</button>
+      <button class="btn mavi" data-git="garaj">🚗 GARAJ</button>
+      <button class="btn kirmizi" data-git="silahlar">💥 SİLAHLAR</button>
+      <button class="btn" id="sesBtn">🔊 Ses: Açık</button>
+    </div>
+    <div class="alt" id="menuIpucu"></div>
+  </div>
+</section>
+
+<!-- ============ BÖLÜMLER ============ -->
+<section class="ekran" id="bolumler">
+  <div class="ic">
+    <div class="ustBar"><button class="btn kucuk" data-git="menu">← Geri</button><h2>Bölümler</h2><span class="paraEtiket" id="bolumPara"></span></div>
+    <div id="bolumListe"></div>
+  </div>
+</section>
+
+<!-- ============ GARAJ ============ -->
+<section class="ekran" id="garaj">
+  <div class="ic">
+    <div class="ustBar"><button class="btn kucuk" data-git="menu">← Geri</button><h2>Garaj</h2><span class="paraEtiket" id="garajPara"></span></div>
+    <canvas id="garajOn"></canvas>
+    <div class="yatayListe" id="arabaListe"></div>
+    <div class="panel" id="arabaDetay"></div>
+    <button class="btn sari genis" data-git="bolumler">▶ Oyna</button>
+  </div>
+</section>
+
+<!-- ============ SİLAHLAR ============ -->
+<section class="ekran" id="silahlar">
+  <div class="ic">
+    <div class="ustBar"><button class="btn kucuk" data-git="menu">← Geri</button><h2>Silahlar</h2><span class="paraEtiket" id="silahPara"></span></div>
+    <p class="bilgiNot">Satın aldığın tüm silahları oyunda <b>SİLAH</b> düğmesiyle (bilgisayarda Q / E) değiştirebilirsin.</p>
+    <div id="silahListe"></div>
+    <button class="btn sari genis" data-git="bolumler">▶ Oyna</button>
+  </div>
+</section>
+
+<!-- ============ OYUN İÇİ GÖSTERGE ============ -->
+<div id="hud">
+  <div class="hudUst">
+    <div class="hudSol">
+      <div class="bar"><div id="canDolu"></div><span id="canYazi"></span></div>
+      <div class="bar"><div id="nitroDolu"></div><span>NİTRO</span></div>
+    </div>
+    <div class="hudOrta">
+      <div id="bolumAd"></div>
+      <div class="bar ilerleme"><div id="ilerDolu"></div><span id="ilerYazi"></span></div>
+    </div>
+    <div class="hudSag">
+      <div class="hudPara"><span class="coin"></span><span id="hudPara">0</span></div>
+      <button id="durBtn" aria-label="Duraklat">II</button>
+    </div>
+  </div>
+  <div id="bossBar"><div id="bossAd"></div><div class="bar"><div id="bossDolu"></div></div></div>
+  <div id="ipucu">WASD / Oklar: sür · Fare: nişan + ateş · Boşluk: nitro · Q/E: silah · P: duraklat</div>
+</div>
+<div id="mobilKontrol">
+  <button id="silahBtn"><canvas id="silahIkon"></canvas><span id="silahAd"></span></button>
+  <button id="nitroBtn">NİTRO</button>
+</div>
+<div id="banner"><div class="b1" id="banner1"></div><div class="b2" id="banner2"></div></div>
+
+<!-- ============ DURAKLAT ============ -->
+<div class="overlay" id="duraklatEkran">
+  <div class="panel">
+    <h2>Mola</h2>
+    <div class="btnSutun">
+      <button class="btn yesil" id="devamBtn">▶ Devam Et</button>
+      <button class="btn mavi" id="yenidenBtn">↻ Baştan Başla</button>
+      <button class="btn" id="sesBtn2">🔊 Ses</button>
+      <button class="btn" data-git="bolumler">Bölümler</button>
+      <button class="btn kirmizi" data-git="menu">Ana Menü</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SONUÇ ============ -->
+<div class="overlay" id="sonuc">
+  <div class="panel">
+    <canvas id="sonucSelim"></canvas>
+    <h2 id="sonucBaslik"></h2>
+    <div class="yildizlar" id="sonucYildiz"></div>
+    <div id="sonucBilgi" style="margin:10px 0;color:var(--soluk);line-height:1.6"></div>
+    <div class="btnSutun">
+      <button class="btn sari" id="sonrakiBtn">Sonraki Bölüm ▶</button>
+      <button class="btn mavi" id="tekrarBtn">↻ Tekrar Oyna</button>
+      <div class="btnSira">
+        <button class="btn" data-git="garaj">🚗 Garaj</button>
+        <button class="btn" data-git="silahlar">💥 Silahlar</button>
+      </div>
+      <button class="btn" data-git="bolumler">Bölümler</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Oyun kodları (sıra önemli) -->
+<script src="js/veri.js"></script>
+<script src="js/cizim.js"></script>
+<script src="js/oyun.js"></script>
+<script src="js/arayuz.js"></script>
+</body>
+</html>
